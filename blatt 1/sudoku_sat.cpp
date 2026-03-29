@@ -1,112 +1,185 @@
-//
-// Created by Florian Kaiser on 25.03.26.
-//
-
 #include <iostream>
+#include <vector>
+#include <cmath>
+
 using namespace std;
 
-int var(int row, int col, int val, int n) {
+int n;              // z.B. 9
+int k;              // sqrt(n)
+vector<vector<int>> clauses;
+vector<vector<string>> string_clauses;
+
+int var(const int row, const int col, const int val) {
     return (row-1)*n*n + (col-1)*n + val;
 }
 
 int main() {
+    n = 4;
+    k = std::sqrt(n);
 
-    for (int i = 1; i <= 9; i++) {
-
+    if (k * k != n) {
+        std::cerr << "n muss eine perfekte Quadratzahl sein!\n";
+        return 1;
     }
 
+    //Rows
+    for (int brow = 0; brow < n; brow++) {
+        for (int val = 0; val < n; val++) {
+            vector<int> clause;
+            vector<string> string_clause;
 
-    /**
-    *for br in 0 .. k-1:
-    for bc in 0 .. k-1:
-    for v in 1 .. n:
-
-    cells = []
-
-    for i in 1 .. k:
-    for j in 1 .. k:
-    r = br*k + i
-    c = bc*k + j
-    cells.append((r,c))
-
-    # alle Paare verbieten
-    for a in 0 .. len(cells)-1:
-    for b in a+1 .. len(cells)-1:
-
-    (r1,c1) = cells[a]
-    (r2,c2) = cells[b]
-
-    clauses.append([
-    -var(r1,c1,v),
-    -var(r2,c2,v)
-    ])
-
-
-**/
-
-
-
-
-
-    // row comparison
-    std::string row = "";
-    std::string row_n = "";
-    int numb = 1;
-    for(int i = 1; i <= 9; i++) {
-        for(int j = 1; j <= 9; j++) {
-            row.append(std::to_string(numb) + " ");
-            row_n.append("-" + std::to_string(numb) + " ");
-            numb++;
-        }
-        row.append("\n");
-        row_n.append("\n");
-    }
-
-    // Column comparison
-    std::string column = "";
-    std::string column_n = "";
-    for(int i = 1; i <= 9; i++){
-        numb = i;
-        for(int j = 1; j <= 9; j++){
-            column.append(std::to_string(numb) + " ");
-            column_n.append("-" + std::to_string(numb) + " ");
-            numb += 9;
-        }
-        column.append("\n");
-        column_n.append("\n");
-    }
-
-    // box comparison
-    std::string box = "";
-    std::string box_n = "";
-    //Box Counter
-    for(int i = 1; i <= 3 ;i++) {
-        int curr_column = i*3;
-        for(int j = 1; j <= 3; j++) {
-            int curr_row = j*3;
-            numb = curr_row * 9 + curr_column - 9;
-            // In box comparison
-            for (int x = 1; x <= 3; x++) {
-                for (int y = 1; y <= 3; y++) {
-                    box.append(std::to_string(numb) + " ");
-                    box_n.append(std::to_string(-numb) + " ");
-                    numb--;
-                }
-                numb -= 6;
+            for (int i = 0; i < n; i++) {
+                clause.push_back(var(brow + 1, i + 1, val + 1));
+                string_clause.push_back("X" + to_string(brow + 1) + to_string(i + 1) + to_string(val + 1));
             }
-            box.append("\n");
-            box_n.append("\n");
+            clauses.push_back(clause);
+            string_clauses.push_back(string_clause);
+
+            for (int a = 0; a < clause.size(); a++) {
+                for (int b = a + 1; b < clause.size(); b++) {
+                    vector<int> pair_clause;
+                    vector<string> pair_string_clause;
+
+                    pair_clause.push_back(-clause[a]);
+                    pair_clause.push_back(-clause[b]);
+
+                    pair_string_clause.push_back("-" + string_clause[a]);
+                    pair_string_clause.push_back("-" + string_clause[b]);
+
+                    clauses.push_back(pair_clause);
+                    string_clauses.push_back(pair_string_clause);
+                }
+            }
         }
     }
 
-    cout << "p cnf " << numb << " ???";
-    cout << "\n";
-    cout << box;
-    cout << box_n;
-    cout << row;
-    cout << row_n;
-    cout << column;
-    cout << column_n;
-    cout << "Fin";
+    //Cols
+    for (int col = 0; col < n; col++) {
+        for (int val = 0; val < n; val++) {
+            vector<int> clause;
+            vector<string> string_clause;
+
+            for (int i = 0; i < n; i++) {
+                clause.push_back(var(i + 1, col + 1 , val + 1));
+                string_clause.push_back("X" + to_string(i + 1) + to_string(col + 1) + to_string(val + 1));
+            }
+            clauses.push_back(clause);
+            string_clauses.push_back(string_clause);
+
+            for (int a = 0; a < clause.size(); a++) {
+                for (int b = a + 1; b < clause.size(); b++) {
+                    vector<int> pair_clause;
+                    vector<string> pair_string_clause;
+
+                    pair_clause.push_back(-clause[a]);
+                    pair_clause.push_back(-clause[b]);
+
+                    pair_string_clause.push_back("-" + string_clause[a]);
+                    pair_string_clause.push_back("-" + string_clause[b]);
+
+                    clauses.push_back(pair_clause);
+                    string_clauses.push_back(pair_string_clause);
+                }
+            }
+        }
+    }
+
+
+    // //Box
+    for (int brow = 0; brow < k; brow++) {
+        for (int bcol = 0; bcol < k; bcol++) {
+            for (int val = 0; val < n; val++) {
+
+                vector<int> clause;
+                vector<string> string_clause;
+
+                for (int i = 0; i < k; i++) {
+                    for (int j = 0; j < k; j++) {
+                        clause.push_back(var(brow*k + i + 1, bcol*k + j + 1, val + 1));
+                        string_clause.push_back("X" + to_string(brow*k + i + 1) + to_string(bcol*k + j + 1) + to_string(val + 1));
+                    }
+                }
+                clauses.push_back(clause);
+                string_clauses.push_back(string_clause);
+
+                for (int a = 0; a < clause.size(); a++) {
+                    for (int b = a + 1; b < clause.size(); b++) {
+                        vector<int> pair_clause;
+                        vector<string> pair_string_clause;
+
+                        pair_clause.push_back(-clause[a]);
+                        pair_clause.push_back(-clause[b]);
+
+                        pair_string_clause.push_back("-" + string_clause[a]);
+                        pair_string_clause.push_back("-" + string_clause[b]);
+
+                        clauses.push_back(pair_clause);
+                        string_clauses.push_back(pair_string_clause);
+                    }
+                }
+            }
+        }
+    }
+
+    //Damits funktioniert noch pro Zelle eine Zahl (eigentlich dumm aber macht doch irgendwie sinn)
+
+    for (int r = 0; r < n; r++) {
+        for (int c = 0; c < n; c++) {
+
+            vector<int> clause;
+            vector<string> string_clause;
+
+            for (int v = 0; v < n; v++) {
+                clause.push_back(var(r+1, c+1, v+1));
+                string_clause.push_back("X" + to_string(r+1) + to_string(c+1) + to_string(v+1));
+            }
+
+            clauses.push_back(clause);
+            string_clauses.push_back(string_clause);
+
+            for (int a = 0; a < clause.size(); a++) {
+                for (int b = a + 1; b < clause.size(); b++) {
+
+                    vector<int> pair_clause;
+                    vector<string> pair_string_clause;
+
+                    pair_clause.push_back(-clause[a]);
+                    pair_clause.push_back(-clause[b]);
+
+                    pair_string_clause.push_back("-" + string_clause[a]);
+                    pair_string_clause.push_back("-" + string_clause[b]);
+
+                    clauses.push_back(pair_clause);
+                    string_clauses.push_back(pair_string_clause);
+                }
+            }
+        }
+    }
+
+
+
+    cout << "p cnf " << n*n*n << " " << clauses.size() + string_clauses.size() << "\n";
+    for (const auto& clause : clauses) {
+        for (size_t i = 0; i < clause.size(); i++) {
+            cout << clause[i];
+            if (i < clause.size() - 1) {
+                cout << " ";
+            }
+        }
+        cout << " 0\n";
+    }
+
+    // for (const auto& string_clause : string_clauses) {
+    //     for (size_t i = 0; i < string_clause.size(); i++) {
+    //         cout << string_clause[i];
+    //         if (i < string_clause.size() - 1) {
+    //             cout << " ";
+    //         }
+    //     }
+    //     cout << " 0\n";
+    // }
+
+
+
     return 0;
 }
