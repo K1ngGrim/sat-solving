@@ -19,10 +19,16 @@ int generate_clauses(int n, string* clauses) {
             int c2 = a*a + b*b;
             if (is_square(c2)) {
                 int c = (int) sqrt(c2);
-                if (c <= n && b < c) {
+                if (c <= n && a < b && b < c) {
+                    //cout << "Found triple: (" << a << ", " << b << ", " << c << ")\n";
                     triples.emplace_back(a, b, c);
                 }
             }
+
+            if (c2 > n * n) {
+                break; // No need to check larger b for this a
+            }
+
         }
     }
 
@@ -52,14 +58,20 @@ int main(int argc, char** argv) {
     vector<double> x = {};
     vector<double> y = {};
 
-    for (int n = 1; n <= 5000; n++) {
+    for (int n = 1; n <= 500; n++) {
         int num_clauses = generate_clauses(n, &clauses);
 
         x.push_back(n);
         y.push_back(num_clauses);
 
-        cout << "n = " << n << ", num_clauses = " << num_clauses << "\n";
+        cout << "n = " << n << ", num_clauses = " << num_clauses << ", num triples " << num_clauses/2 <<"\n";
     }
+
+
+    /*int num_clauses = generate_clauses(100, &clauses);
+
+    cout << "n = " << 10 << ", num_clauses = " << num_clauses << "\n";
+    cout << clauses;
 
     /**
     cout << "x = np.array([";
