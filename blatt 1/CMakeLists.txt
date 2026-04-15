@@ -16,10 +16,10 @@ add_executable(blatt_1_1
         aufgabe1/solver.cpp
 )
 
-target_include_directories(blatt_1_1 PRIVATE
-        aufgabe1/cadical/src
-)
+#target_include_directories(blatt_1_1 PRIVATE
+#        aufgabe1/cadical/src
+#)
 
-target_link_libraries(blatt_1_1
-        ${CMAKE_SOURCE_DIR}/aufgabe1/cadical/build/libcadical.a
-)
+#target_link_libraries(blatt_1_1
+#        ${CMAKE_SOURCE_DIR}/aufgabe1/cadical/build/libcadical.a
+#)
