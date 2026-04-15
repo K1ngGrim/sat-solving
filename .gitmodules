@@ -1,0 +1,3 @@
+[submodule "blatt 1/aufgabe1/cadical"]
+	path = blatt 1/aufgabe1/cadical
+	url = https://github.com/arminbiere/cadical.git
