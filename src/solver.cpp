@@ -14,15 +14,13 @@ struct Edge {
     int u, v;
 };
 
-int n; // Anzahl Knoten
-int Kmax; // maximale Farben
+int n;
+int Kmax;
 
-// Variable: x(v,c)
 int var(int v, int c) {
     return v * Kmax + c + 1;
 }
 
-// Aktivierungsvariable für Farbe c
 int color_active(int c) {
     return n * Kmax + c + 1;
 }
@@ -34,18 +32,28 @@ void add_clause(void* solver, const vector<int>& clause) {
 }
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
-        cerr << "Usage: ./color graph.col\n";
+    if (argc != 2) {
+        cerr << "Usage: ./blatt_1_1 <datei>\n";
         return 1;
     }
 
-    ifstream file("/home/flo/Dokumente/Workspace/sat-solving/blatt 1/aufgabe1/examples/small_test.col");
+    std::ifstream file(argv[1]);
+
+    if (!file) {
+        cerr << "Kann Datei nicht oeffnen: " << argv[1] << '\n';
+        return 1;
+    }
+
+
     string line;
 
     vector<Edge> edges;
 
-    // Parsing
     while (getline(file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
         if (line[0] == 'p') {
             string tmp;
             int m;
@@ -60,7 +68,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    Kmax = n; // worst case
+    Kmax = n;
 
     void* solver = ipasir_init();
 
@@ -68,23 +76,28 @@ int main(int argc, char** argv) {
     // CNF einmal komplett bauen
     // =========================
 
+    //0. Farbe muss aktiviert sein
 
-    // Hier theoretisch alle Klauseln hinzufügen, die die Struktur des Problems beschreiben. Diese Klauseln bleiben während des gesamten inkrementellen Lösungsprozesses gleich. TODO
+    for (int v = 0; v < n; v++) {
+        for (int c = 0; c < Kmax; c++) {
+            add_clause(solver, { -var(v,c), color_active(c) });
+        }
+    }
 
-    /* Folgende sind aber falsch
+    //1. Jeder Knoten hat mindestens eine Farbe
 
-    // 1. Jeder Knoten hat mindestens eine Farbe (nur wenn Farbe aktiv)
     for (int v = 0; v < n; v++) {
         vector<int> clause;
+        clause.reserve(Kmax);
         for (int c = 0; c < Kmax; c++) {
-            // x(v,c) AND color_active(c)
-            // encoded as: ¬active(c) ∨ x(v,c)
             clause.push_back(var(v, c));
         }
         add_clause(solver, clause);
     }
 
-    // 2. Höchstens eine Farbe pro Knoten
+    //2. Jeder Knoten hat maximal eine Farbe
+
+    // 2. Jeder Knoten hat maximal eine Farbe
     for (int v = 0; v < n; v++) {
         for (int c1 = 0; c1 < Kmax; c1++) {
             for (int c2 = c1 + 1; c2 < Kmax; c2++) {
@@ -92,12 +105,11 @@ int main(int argc, char** argv) {
                     -var(v, c1),
                     -var(v, c2)
                 });
-                cout << "Added node clause: " << -var(v, c1) << " " << -var(v, c2) << "\n";
             }
         }
     }
 
-    // 3. Kanten: gleiche Farbe verboten
+    //3. Benachbarte Knoten haben nicht die selbe Farbe
 
     for (auto& e : edges) {
         for (int c = 0; c < Kmax; c++) {
@@ -105,11 +117,8 @@ int main(int argc, char** argv) {
                 -var(e.u, c),
                 -var(e.v, c)
             });
-            cout << "Added edge clause: " << -var(e.u, c) << " " << -var(e.v, c) << "\n";
         }
     }
-
-*/
 
     // =========================
     // Inkrementelles Lösen
@@ -128,6 +137,7 @@ int main(int argc, char** argv) {
         for (int c = k; c < Kmax; c++) {
             ipasir_assume(solver, -color_active(c));
         }
+
 
         int res = ipasir_solve(solver);
 
